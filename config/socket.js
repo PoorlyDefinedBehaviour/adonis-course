@@ -1,4 +1,4 @@
-'use strict'
+"use strict"
 
 /*
 |--------------------------------------------------------------------------
@@ -17,7 +17,7 @@ module.exports = {
   | The base path on which the websocket server will accept connections.
   |
   */
-  path: '/adonis-ws',
+  path: "/adonis-ws",
 
   /*
   |--------------------------------------------------------------------------

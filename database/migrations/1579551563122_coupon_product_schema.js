@@ -14,13 +14,13 @@ class CouponProductSchema extends Schema {
       table
         .foreign("coupon_id")
         .references("id")
-        .inTable("coupons")
+        .on("coupons")
         .onDelete("cascade")
 
       table
         .foreign("product_id")
         .references("id")
-        .inTable("products")
+        .on("products")
         .onDelete("cascade")
 
       table.timestamps()

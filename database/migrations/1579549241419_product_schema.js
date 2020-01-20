@@ -51,13 +51,13 @@ class ProductSchema extends Schema {
       table
         .foreign("product_id")
         .references("id")
-        .inTable("products")
+        .on("products")
         .onDelete("cascade")
 
       table
         .foreign("category_id")
         .references("id")
-        .inTable("categories")
+        .on("categories")
         .onDelete("cascade")
 
       table.timestamps()

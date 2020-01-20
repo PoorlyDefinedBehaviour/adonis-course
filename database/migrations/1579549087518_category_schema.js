@@ -12,7 +12,7 @@ class CategorySchema extends Schema {
       table.integer("image_id").unsigned()
 
       table
-        .foregin("image_id")
+        .foreign("image_id")
         .references("id")
         .inTable("images")
         .onDelete("cascade")

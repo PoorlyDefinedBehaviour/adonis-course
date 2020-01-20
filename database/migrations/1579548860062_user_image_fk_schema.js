@@ -7,7 +7,7 @@ class UserImageFkSchema extends Schema {
   up() {
     this.table("users", (table) => {
       table
-        .foregin("image_id")
+        .foreign("image_id")
         .references("id")
         .inTable("images")
         .onDelete("cascade")

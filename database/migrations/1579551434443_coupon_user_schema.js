@@ -15,13 +15,13 @@ class CouponUserSchema extends Schema {
         .foreign("coupon_id")
         .references("id")
         .inTable("coupons")
-        .onCascade("delete")
+        .onDelete("cascade")
 
       table
         .foreign("user_id")
         .references("id")
         .inTable("users")
-        .onCascade("delete")
+        .onDelete("cascade")
 
       table.timestamps()
     })

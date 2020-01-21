@@ -1,8 +1,8 @@
 # Things to do on my own
 
-> Add tests
-> Add docker
-> Add CI
+> Add tests</br>
+> Add docker</br>
+> Add CI</br>
 
 # Adonis API application
 

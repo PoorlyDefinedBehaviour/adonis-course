@@ -2,17 +2,36 @@
 const Route = use("Route")
 
 Route.group(() => {
-  Route.resource("categories", "CategoryController").apiOnly()
+  Route.resource("categories", "CategoryController")
+    .apiOnly()
+    .validator(
+      new Map([
+        [["categories.store"], ["Admin/Categories/Store"]],
+        [["categories.update"], ["Admin/Categories/Store"]]
+      ])
+    )
 
   Route.resource("products", "ProductController").apiOnly()
 
   Route.resource("coupons", "CouponController").apiOnly()
 
-  Route.resource("orders", "OrderController").apiOnly()
+  Route.post("orders/:id/discount", "OrderController.applyDiscount")
+  Route.delete("orders/:id/discount", "OrderController.removeDiscount")
+  Route.resource("orders", "OrderController")
+    .apiOnly()
+    .validator(new Map([[["orders.store"], ["Admin/Orders/Store"]]]))
 
   Route.resource("images", "ImageController").apiOnly()
 
-  Route.resource("users", "UserController").apiOnly()
+  Route.resource("users", "UserController")
+    .apiOnly()
+    .validator(
+      new Map([
+        [["users.store"], ["Admin/Users/Store"]],
+        [["users.update"], ["Admin/Users/Store"]]
+      ])
+    )
 })
   .prefix("v1/admin")
   .namespace("Admin")
+  .middleware(["auth", "is:(admin||manager)"])

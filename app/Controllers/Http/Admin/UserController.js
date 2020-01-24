@@ -4,9 +4,8 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
-/**
- * Resourceful controller for interacting with users
- */
+const User = use("App/Models/User")
+
 class UserController {
   /**
    * Show a list of all users.
@@ -17,18 +16,19 @@ class UserController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index({ request, response, view }) {}
+  async index({ request, pagination }) {
+    const query = User.query()
 
-  /**
-   * Render a form to be used for creating a new user.
-   * GET users/create
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async create({ request, response, view }) {}
+    const name = request.input("name")
+    if (name) {
+      query.where("name", "LIKE", `%${name}%`)
+      query.orWhere("surnameame", "LIKE", `%${name}%`)
+      query.orWhere("email", "LIKE", `%${name}%`)
+    }
+
+    const users = await query.paginate(pagination.page, pagination.limit)
+    return users
+  }
 
   /**
    * Create/save a new user.
@@ -38,7 +38,24 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store({ request, response }) {}
+  async store({ request, response }) {
+    try {
+      const data = request.only([
+        "name",
+        "surname",
+        "email",
+        "password",
+        "image_id"
+      ])
+
+      const user = await User.create(data)
+      return response.status(201).send(user)
+    } catch (exception) {
+      return response
+        .status(400)
+        .send({ error: { message: "Não foi possível criar o usuário" } })
+    }
+  }
 
   /**
    * Display a single user.
@@ -49,18 +66,10 @@ class UserController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show({ params, request, response, view }) {}
-
-  /**
-   * Render a form to update an existing user.
-   * GET users/:id/edit
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async edit({ params, request, response, view }) {}
+  async show({ params }) {
+    const user = User.findOrFail(params.id)
+    return user
+  }
 
   /**
    * Update user details.
@@ -70,7 +79,22 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update({ params, request, response }) {}
+  async update({ params, request }) {
+    const user = User.findOrFail(params.id)
+
+    const data = request.only([
+      "name",
+      "surname",
+      "email",
+      "password",
+      "image_id"
+    ])
+
+    user.merge(data)
+
+    await user.save()
+    return user
+  }
 
   /**
    * Delete a user with id.
@@ -80,7 +104,10 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy({ params, request, response }) {}
+  async destroy({ params }) {
+    const user = await User.findOrFail(params.id)
+    await user.delete()
+  }
 }
 
 module.exports = UserController

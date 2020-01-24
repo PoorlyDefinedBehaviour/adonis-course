@@ -9,7 +9,7 @@ class PasswordReset extends Model {
     super.boot()
 
     this.addHook("beforeCreate", async (model) => {
-      model.token = await randomBytes(10).toString("hex")
+      model.token = await randomBytes(16).toString("hex")
 
       const expiresAt = new Date()
       expiresAt.setMinutes(expiresAt.getMinutes() + 15)

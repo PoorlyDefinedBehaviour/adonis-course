@@ -4,9 +4,12 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
-/**
- * Resourceful controller for interacting with images
- */
+const Image = use("App/Models/Image")
+const Helpers = use("Helpers")
+const crypto = require("crypto")
+const fs = require("fs")
+const { promisify } = require("utils")
+
 class ImageController {
   /**
    * Show a list of all images.
@@ -16,19 +19,15 @@ class ImageController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    * @param {View} ctx.view
+   * @param {Object} ctx.pagination
    */
-  async index({ request, response, view }) {}
+  async index({ pagination }) {
+    const images = await Image.query()
+      .orderBy("id", "DESC")
+      .paginate(pagination.page, pagination.limit)
 
-  /**
-   * Render a form to be used for creating a new image.
-   * GET images/create
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async create({ request, response, view }) {}
+    return images
+  }
 
   /**
    * Create/save a new image.
@@ -38,7 +37,28 @@ class ImageController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store({ request, response }) {}
+  async store({ request, response }) {
+    try {
+      const image = request.image("images", {
+        types: ["image"],
+        size: "2mb"
+      })
+
+      await image.move(Helpers.publicPath("/uploads"), {
+        name: `${new Date().getTime()}_${crypto
+          .randomBytes(10)
+          .toString("hex")}.${image.subtype}`
+      })
+
+      if (!image.moved()) {
+        return image.error()
+      }
+    } catch (exception) {
+      return response
+        .status(400)
+        .send({ error: { message: "Falha ao fazer upload da imagem" } })
+    }
+  }
 
   /**
    * Display a single image.
@@ -48,19 +68,12 @@ class ImageController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    * @param {View} ctx.view
+   * @param {Object} ctx.pagination
    */
-  async show({ params, request, response, view }) {}
-
-  /**
-   * Render a form to update an existing image.
-   * GET images/:id/edit
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {View} ctx.view
-   */
-  async edit({ params, request, response, view }) {}
+  async show({ params }) {
+    const image = await Image.findOrFail(params.id)
+    return image
+  }
 
   /**
    * Update image details.
@@ -70,7 +83,22 @@ class ImageController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update({ params, request, response }) {}
+  async update({ params, request, response }) {
+    const image = await Image.findOrFail(params.id)
+
+    try {
+      const name = request.input("original_name")
+
+      image.merge(name)
+      await image.save()
+
+      return image
+    } catch (exception) {
+      return response
+        .status(400)
+        .send({ error: { message: "Não foi possível atualizar essa imagem" } })
+    }
+  }
 
   /**
    * Delete a image with id.
@@ -80,7 +108,20 @@ class ImageController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy({ params, request, response }) {}
+  async destroy({ params, request, response }) {
+    const image = await Image.findOrFail(params.id)
+
+    try {
+      const imagePath = Helpers.publicPath(`uploads/${image.path}`)
+
+      await promisify(fs.unlink)(imagePath)
+      await image.delete()
+    } catch (exception) {
+      return response
+        .status(400)
+        .send({ error: { message: "Não foi possível excluir essa imagem" } })
+    }
+  }
 }
 
 module.exports = ImageController

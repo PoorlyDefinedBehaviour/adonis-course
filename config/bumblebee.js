@@ -1,4 +1,4 @@
-'use strict'
+"use strict"
 
 module.exports = {
   /*
@@ -18,11 +18,11 @@ module.exports = {
    * representation.
    * Currently supported: 'plain', 'data'
    */
-  serializer: 'plain',
+  serializer: "plain",
 
   /*
    * When a transformer is reffered to by its name only, Bumblebee will try to
    * resolve the transformer using this namespace as prefix.
    */
-  namespace: 'App/Transformers'
+  namespace: "App/Transformers"
 }

@@ -8,6 +8,7 @@ const Coupon = use("App/Models/Coupon")
 const Discount = use("App/Models/Discount")
 const Database = use("Database")
 const OrderService = use("App/Services/Order/OrderService")
+const OrderTransformer = use("App/Transformers/admin/Order")
 
 class OrderController {
   /**
@@ -19,8 +20,9 @@ class OrderController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    * @param {object} ctx.pagination
+   * @param {object} ctx.transform
    */
-  async index({ request, pagination }) {
+  async index({ request, pagination, transform }) {
     const query = Order.query()
 
     const status = request.input("status")
@@ -29,7 +31,8 @@ class OrderController {
     }
 
     const orders = await query().paginate(pagination.page, pagination.limit)
-    return orders
+    const transformedOrders = await transform.paginate(orders, OrderTransformer)
+    return transformedOrders
   }
 
   /**
@@ -39,8 +42,9 @@ class OrderController {
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
+   * @param {object} ctx.transform
    */
-  async store({ request, response }) {
+  async store({ request, response, transform }) {
     const transaction = await Database.beginTransaction()
 
     try {
@@ -54,7 +58,13 @@ class OrderController {
 
       await transaction.commit()
 
-      return order
+      const reloadedOrder = await Order.find(order.id)
+
+      const transformedOrder = await transform
+        .include("users,items")
+        .item(reloadedOrder, OrderTransformer)
+
+      return transformedOrder
     } catch (exception) {
       await transaction.rollback()
 
@@ -73,10 +83,16 @@ class OrderController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    * @param {object} ctx.pagination
+   * @param {object} ctx.transform
    */
-  async show({ params }) {
+  async show({ params, transform }) {
     const order = await Order.findOrFail(params.id)
-    return order
+
+    const transformedOrder = await transform
+      .include("user,items,discounts")
+      .item(order, OrderTransformer)
+
+    return transformedOrder
   }
 
   /**
@@ -86,8 +102,9 @@ class OrderController {
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
+   * @param {object} ctx.transform
    */
-  async update({ params, request, response }) {
+  async update({ params, request, response, transform }) {
     const order = await Order.findOrFail(params.id)
 
     const transaction = await Database.beginTransaction()
@@ -105,7 +122,11 @@ class OrderController {
 
       await transaction.commit()
 
-      return order
+      const transformedOrder = await transform
+        .include("user,items,discounts,coupons")
+        .item(order, OrderTransformer)
+
+      return transformedOrder
     } catch (exception) {
       await transaction.rollback()
 
@@ -143,10 +164,13 @@ class OrderController {
     }
   }
 
-  async applyDiscount({ params, request, response }) {
+  async applyDiscount({ params, request, response, transform }) {
     const code = request.input("code")
     const coupon = await Coupon.findByOrFail("code", code.toUpperCase())
     const order = await Order.findOrFail(params.id)
+    const transformedOrder = await transform
+      .include("user,items,discounts,coupons")
+      .item(order, OrderTransformer)
 
     try {
       const orderService = new OrderService(order)
@@ -162,7 +186,7 @@ class OrderController {
         })
 
         return {
-          order,
+          transformedOrder,
           info: {
             success: true,
             message: "Cupom aplicado com sucesso"
@@ -171,7 +195,7 @@ class OrderController {
       }
 
       return {
-        order,
+        transformedOrder,
         info: {
           success: false,
           message: "Não foi possível aplicar este cupom"

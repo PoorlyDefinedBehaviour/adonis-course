@@ -7,6 +7,13 @@ class Store {
       description: "required"
     }
   }
+
+  get messages() {
+    return {
+      "title.required": "Um título é obrigatório",
+      "description.required": "Uma descrição é obrigatória"
+    }
+  }
 }
 
 module.exports = Store

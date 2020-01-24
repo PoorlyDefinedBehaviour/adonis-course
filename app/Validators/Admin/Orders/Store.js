@@ -11,6 +11,13 @@ class Store {
       "items.*.quantity": "min:1"
     }
   }
+
+  get messages() {
+    return {
+      "items.*.product_id.exists": "Um produto com esse id precisa existir",
+      "items.*.quantity": "A quantidade do item deve ser um ou mais"
+    }
+  }
 }
 
 module.exports = Store

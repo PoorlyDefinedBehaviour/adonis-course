@@ -4,6 +4,7 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 
 const Product = use("App/Models/Product")
+const ProductTransformer = use("App/Transforms/Admin/Product")
 
 class ProductController {
   /**
@@ -14,17 +15,25 @@ class ProductController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    * @param {View} ctx.view
-   * @param {Object} ctx.pagination
+   * @param {object} ctx.pagination
+   * @param {object} ctx.transform
    */
-  async index({ request, pagination }) {
+  async index({ request, pagination, transform }) {
     const query = Product.query()
 
     const name = request.input("name")
     if (name) {
       query.where("name", "LIKE", `%${name}%`)
     }
+
     const products = await query.paginate(pagination.page, pagination.limit)
-    return products
+
+    const transformedProducts = await transform.paginate(
+      products,
+      ProductTransformer
+    )
+
+    return transformedProducts
   }
 
   /**
@@ -34,13 +43,21 @@ class ProductController {
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {Object} ctx.pagination
+   * @param {object} ctx.pagination
+   * @param {object} ctx.transform
    */
-  async store({ request, response }) {
+  async store({ request, response, transform }) {
     try {
       const data = request.only(["name", "description", "price", "image_id"])
+
       const product = await Product.create(data)
-      return response.status(201).send(product)
+
+      const transformedProduct = await transform.item(
+        product,
+        ProductTransformer
+      )
+
+      return response.status(201).send(transformedProduct)
     } catch (exception) {
       return response
         .status(400)
@@ -56,11 +73,15 @@ class ProductController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    * @param {View} ctx.view
-   * @param {Object} ctx.pagination
+   * @param {object} ctx.pagination
+   * @param {object} ctx.transform
    */
-  async show({ params }) {
+  async show({ params, transform }) {
     const product = await Product.findOrFail(params.id)
-    return product
+
+    const transformedProduct = await transform.item(product, ProductTransformer)
+
+    return transformedProduct
   }
 
   /**
@@ -70,15 +91,24 @@ class ProductController {
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
+   * @param {object} ctx.transform
    */
-  async update({ params, request, response }) {
+  async update({ params, request, response, transform }) {
     const product = await Product.findOrFail(params.id)
 
     try {
       const data = request.only(["name", "description", "price", "image_id"])
+
       product.merge(data)
+
       await product.save()
-      return product
+
+      const transformedProduct = await transform.item(
+        product,
+        ProductTransformer
+      )
+
+      return transformedProduct
     } catch (exception) {
       return response
         .status(400)

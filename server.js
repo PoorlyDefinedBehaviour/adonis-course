@@ -1,4 +1,4 @@
-'use strict'
+"use strict"
 
 /*
 |--------------------------------------------------------------------------
@@ -17,9 +17,10 @@
 |     Make sure to pass a relative path from the project root.
 */
 
-const { Ignitor } = require('@adonisjs/ignitor')
+const { Ignitor } = require("@adonisjs/ignitor")
 
-new Ignitor(require('@adonisjs/fold'))
+new Ignitor(require("@adonisjs/fold"))
   .appRoot(__dirname)
+  .wsServer()
   .fireHttpServer()
   .catch(console.error)

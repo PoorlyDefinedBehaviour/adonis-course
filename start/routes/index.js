@@ -14,7 +14,11 @@
 */
 
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
-// const Route = use("Route")
+const Route = use("Route")
+
+Route.get("v1/me", "UserController.me")
+  .as("me")
+  .middleare("auth")
 
 require("./auth")
 require("./admin")

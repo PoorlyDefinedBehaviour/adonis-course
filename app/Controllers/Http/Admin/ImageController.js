@@ -6,10 +6,10 @@
 
 const Image = use("App/Models/Image")
 const Helpers = use("Helpers")
+const ImageTransformer = use("App/Transforms/Admin/Image")
 const crypto = use("crypto")
 const fs = use("fs")
 const { promisify } = use("utils")
-const ImageTransformer = use("App/Transforms/Admin/Image")
 
 class ImageController {
   /**

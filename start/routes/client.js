@@ -7,8 +7,8 @@ Route.group(() => {
   Route.get("products", "ProductController.index")
   Route.get("products/:id", "ProductController.show")
 
-  Route.get("orders", "OrderController.index")
-  Route.get("orders/:id", "OrderController.show")
+  Route.get("orders", "OrderController.index").middleware("auth")
+  Route.get("orders/:id", "OrderController.show").middleware("auth")
   Route.post("orders", "OrderController.store")
   Route.patch("orders/:id", "OrderController.update")
 })

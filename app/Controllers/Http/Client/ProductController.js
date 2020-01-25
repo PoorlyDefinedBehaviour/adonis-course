@@ -2,11 +2,10 @@
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
-/** @typedef {import('@adonisjs/framework/src/View')} View */
 
-/**
- * Resourceful controller for interacting with products
- */
+const Product = use("App/Models/Product")
+const ProductTransformer = use("App/Transformers/Admin/Product")
+
 class ProductController {
   /**
    * Show a list of all products.
@@ -16,20 +15,25 @@ class ProductController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    * @param {View} ctx.view
-   * @param {object} ctx.transformer
+   * @param {object} ctx.transform
    */
-  async index({ request, response, view }) {}
+  async index({ request, pagination, transform }) {
+    const query = Product.query()
 
-  /**
-   * Create/save a new product.
-   * POST products
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {object} ctx.transformer
-   */
-  async store({ request, response }) {}
+    const title = request.input("title")
+    if (title) {
+      query.where("title", "LIKE", `%${title}%`)
+    }
+
+    const products = await query.paginate(pagination.page, pagination.limit)
+
+    const transformedProducts = await transform.paginate(
+      products,
+      ProductTransformer
+    )
+
+    return transformedProducts
+  }
 
   /**
    * Display a single product.
@@ -39,30 +43,15 @@ class ProductController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    * @param {View} ctx.view
-   * @param {object} ctx.transformer
+   * @param {object} ctx.transform
    */
-  async show({ params, request, response, view }) {}
+  async show({ params, transform }) {
+    const product = await Product.findOrFail(params.id)
 
-  /**
-   * Update product details.
-   * PUT or PATCH products/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   * @param {object} ctx.transformer
-   */
-  async update({ params, request, response }) {}
+    const tranformedProduct = await transform.item(product, ProductTransformer)
 
-  /**
-   * Delete a product with id.
-   * DELETE products/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async destroy({ params, request, response }) {}
+    return tranformedProduct
+  }
 }
 
 module.exports = ProductController

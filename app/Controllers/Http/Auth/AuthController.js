@@ -1,6 +1,7 @@
 "use strict"
 
 const Database = use("Database")
+const Ws = use("Ws")
 const User = use("App/Models/User")
 const Role = use("Role")
 
@@ -25,7 +26,13 @@ class AuthController {
         .first()
 
       await user.roles().attach([clientRole.id], null, transaction)
+
       await transaction.commit()
+
+      const topic = Ws.getChannel("notifications").topic("notifications")
+      if (topic) {
+        topic.broadcast("new:user")
+      }
 
       return response.status(201).send(user)
     } catch (exception) {

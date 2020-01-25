@@ -11,8 +11,8 @@ class Pagination {
    */
   async handle(ctx, next) {
     if (ctx.request.method() === "GET") {
-      const page = parseInt(ctx.request.input("page"))
-      const limit = parseInt(ctx.request.input("limit"))
+      const page = parseInt(ctx.request.input("page", 1))
+      const limit = parseInt(ctx.request.input("limit", 20))
 
       ctx.pagination = {
         page,

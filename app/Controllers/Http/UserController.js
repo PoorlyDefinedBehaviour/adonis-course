@@ -4,7 +4,7 @@ const UserTransformer = use("App/Tranformers/Admin/Transformer")
 
 class UserController {
   async me({ transform, auth }) {
-    const user = await auth
+    const user = await auth.getUser()
 
     const transformedUser = await transform.item(user, UserTransformer)
     transformedUser.roles = await user.getRoles()
